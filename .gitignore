@@ -2,3 +2,6 @@
 /input
 /output
 __pecache__
+*.csv
+!Sample.csv
+*.xml
