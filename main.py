@@ -60,16 +60,23 @@ def process_file(csv_path: Path, parent_uid: str):
 
     output_path = csv_path.with_suffix(".xml")
     try:
-        # Явно удаляем старый файл если он существует
+        # Удаляем файл если он существует
         if output_path.exists():
             output_path.unlink()
 
+        # Записываем файл
         with open(output_path, "w", encoding="utf-8") as f:
             f.write(xml_content)
         logger.info(f"Файл сохранён: {output_path}")
         print(f"✅ {csv_path.name} → {output_path.name}")
+
+        # Добавляем отладку
+        logger.debug(
+            f"Размер сгенерированного XML: {len(xml_content)} символов")
+
     except Exception as e:
         logger.error(f"Ошибка сохранения: {e}", exc_info=True)
+        return
 
 
 def main():
@@ -97,8 +104,6 @@ def main():
 
     # Создаем директорию логов если не существует
     os.makedirs("log", exist_ok=True)
-    # Создаем директорию output если не существует
-    os.makedirs("output", exist_ok=True)
 
     for filename in csv_files:
         csv_path = file_manager.base_directory / filename

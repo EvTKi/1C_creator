@@ -24,6 +24,22 @@ class HierarchyParser:
         self.config = get_config_manager()
         self.paths_with_uid = set()
 
+    def _normalize_path(self, path: Tuple[str, ...]) -> Tuple[str, ...]:
+        """
+        Нормализует путь, удаляя повторяющиеся последовательные элементы.
+        Пример: ('A', 'B', 'B', 'C') -> ('A', 'B', 'C')
+        """
+        if not path:
+            return path
+
+        normalized = [path[0]]
+        for i in range(1, len(path)):
+            # Добавляем элемент только если он отличается от предыдущего
+            if path[i] != normalized[-1]:
+                normalized.append(path[i])
+
+        return tuple(normalized)
+
     def _read_lines(self) -> List[Tuple[str, str, str]]:
         """Читает строки из файла или возвращает тестовые данные."""
         if self.file_path and self.file_path.exists():
@@ -60,6 +76,10 @@ class HierarchyParser:
                                 cck_header, '').strip() if cck_header else ""
 
                             if path:
+                                # Нормализуем путь при чтении
+                                parts = tuple(p.strip()
+                                              for p in path.split('\\') if p.strip())
+                                normalized_parts = self._normalize_path(parts)
                                 data.append((path, uid, cck_code))
 
                     self.logger.debug(f"Прочитано {len(data)} строк")
@@ -98,69 +118,62 @@ class HierarchyParser:
         lines = self._read_lines()
 
         # Собираем данные
-        path_to_uid = {}  # пути → uid
+        path_to_uid = {}  # пути → uid (виртуальные контейнеры)
         path_to_cck = {}
         all_paths = []    # все пути из CSV
 
         for line, uid, cck_code in lines:
             parts = tuple(p.strip() for p in line.split('\\') if p.strip())
-            if parts:
-                all_paths.append(parts)
+            # Нормализуем путь
+            normalized_parts = self._normalize_path(parts)
+            if normalized_parts:
+                all_paths.append(normalized_parts)
                 if uid:
-                    path_to_uid[parts] = uid
+                    path_to_uid[normalized_parts] = uid
                 if cck_code:
-                    path_to_cck[parts] = cck_code
+                    path_to_cck[normalized_parts] = cck_code
 
         # Сохраняем как атрибут для доступа извне
-        self.path_to_uid = path_to_uid  # Добавить эту строку!
+        self.path_to_uid = path_to_uid
 
         # === Определяем, что создавать ===
         paths_to_create = set()      # объекты для создания в XML
         external_children = defaultdict(list)  # родитель → [uid] внешних детей
         parent_uid_map = {}          # ребенок → uid виртуального родителя
 
-        # 1. Создаем карту замен: путь с UID → его UID
-        path_replacements = {}
-        for path, uid in path_to_uid.items():
-            path_replacements[path] = uid
-
-        # 2. Добавляем пути для создания (исключая виртуальные контейнеры)
+        # 1. Добавляем все пути сначала
         for path in all_paths:
-            if path not in path_to_uid:  # Не виртуальный контейнер
-                paths_to_create.add(path)
+            paths_to_create.add(path)
 
-        # 3. Добавляем предков, но с заменой виртуальных контейнеров
+        # 2. Добавляем всех предков для полной иерархии
         for path in list(paths_to_create):
-            # Для каждого пути, заменяем виртуальные контейнеры на их UID
-            normalized_path = []
-            for i in range(1, len(path) + 1):
-                segment = path[:i]
-                # Если сегмент является виртуальным контейнером, заменяем на его UID
-                if segment in path_to_uid:
-                    # Не добавляем сегмент, он виртуальный
-                    continue
-                else:
-                    normalized_path.append(segment)
+            for i in range(1, len(path)):
+                ancestor = path[:i]
+                # Нормализуем предка
+                normalized_ancestor = self._normalize_path(ancestor)
+                if normalized_ancestor not in path_to_uid:  # не виртуальный контейнер
+                    paths_to_create.add(normalized_ancestor)
 
-            # Добавляем все нормализованные сегменты
-            for norm_seg in normalized_path:
-                if norm_seg not in paths_to_create:
-                    paths_to_create.add(norm_seg)
-
-        # 4. Обрабатываем виртуальные контейнеры
+        # 3. Обрабатываем виртуальные контейнеры
         for virtual_path, uid in path_to_uid.items():
             # Виртуальный контейнер добавляется как внешний ребенок своему родителю
             if len(virtual_path) > 1:
                 parent_path = virtual_path[:-1]
-                # Если родитель не виртуальный, добавляем внешнего ребенка
-                if parent_path not in path_to_uid:
-                    external_children[parent_path].append(uid)
+                # Нормализуем родительский путь
+                normalized_parent = self._normalize_path(parent_path)
+                if normalized_parent not in path_to_uid:
+                    external_children[normalized_parent].append(uid)
 
             # Дети виртуального контейнера получают ссылку на его uid как родителя
             for child_path in all_paths:
+                # Проверяем, что нормализованный путь начинается с виртуального
                 if (len(child_path) == len(virtual_path) + 1 and
                         child_path[:len(virtual_path)] == virtual_path):
                     parent_uid_map[child_path] = uid
+
+        # 4. Удаляем виртуальные контейнеры из paths_to_create
+        for virtual_path in path_to_uid.keys():
+            paths_to_create.discard(virtual_path)
 
         return (
             sorted(list(paths_to_create)),
