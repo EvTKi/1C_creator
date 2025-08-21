@@ -7,6 +7,7 @@ from modules.logger_manager import setup_logger
 from modules.hierarchy_parser import HierarchyParser
 from modules.xml_generator import XMLGenerator
 from modules.file_manager import create_cli_manager, create_file_manager
+os.makedirs("log", exist_ok=True)
 
 
 def process_file(csv_path: Path, parent_uid: str):

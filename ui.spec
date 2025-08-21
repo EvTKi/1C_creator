@@ -7,20 +7,15 @@ a = Analysis(
     pathex=[],
     binaries=[],
     datas=[
-        ('modules', 'modules'),        # Директория с модулями
-        ('main.py', '.'),              # Главный скрипт
+        ('modules', 'modules'),  # Копируем папку modules
     ],
     hiddenimports=[
-        'modules.config_manager',
-        'modules.csv_processor',
-        'modules.csv_reader',
-        'modules.file_manager',
-        'modules.logger_manager',
-        'modules.xml_generator',
-        'PyQt5',
-        'PyQt5.QtWidgets',
-        'PyQt5.QtCore',
-        'PyQt5.QtGui',
+        'main',
+        'hierarchy_parser',
+        'xml_generator',
+        'config_manager',
+        'file_manager',
+        'logger_manager',
     ],
     hookspath=[],
     hooksconfig={},
@@ -41,7 +36,7 @@ exe = EXE(
     a.zipfiles,
     a.datas,
     [],
-    name='1C_to_CK-11',
+    name='CSV_to_XML_Converter',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
@@ -54,4 +49,5 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
+    icon=None,  # Можно добавить иконку
 )

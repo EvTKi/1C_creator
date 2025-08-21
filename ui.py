@@ -340,6 +340,16 @@ class CSVProcessorApp(QMainWindow):
         csv_dir = self.csv_path_input.text()
 
         selected_files = []
+        # Создаем директорию log если ее нет
+        # log_dir = "log"
+        # if not os.path.exists(log_dir):
+        #     try:
+        #         os.makedirs(log_dir, exist_ok=True)
+        #         self.add_log(f"✅ Создана директория: {log_dir}\n")
+        #     except Exception as e:
+        #         self.add_log(
+        #             f"❌ Не удалось создать директорию {log_dir}: {e}\n")
+        #         return
         for checkbox in self.file_checkboxes:
             if isinstance(checkbox, QCheckBox) and checkbox.isChecked():
                 selected_files.append(checkbox.text())
