@@ -209,8 +209,16 @@ class XMLGenerator:
                                     f'    <me:IdentifiedObject.ChildObjects rdf:resource="{child_id}" />')
                                 added_children.add(child_id)
                                 q.put(child)
-
-            # Закрываем тег
+            # ВАЖНО: виртуальные контейнеры (с uid) НЕ добавляются как ChildObjects
+            # Согласно требованиям, они существуют только как ParentObject для своих детей
+            # if current in external_children:
+            #     for uid in external_children[current]:
+            #         ext_id = f"#_{uid}"
+            #         if ext_id not in added_children:
+            #             lines.append(
+            #                 f'    <me:IdentifiedObject.ChildObjects rdf:resource="{ext_id}" />')
+            #             added_children.add(ext_id)
+                        # Закрываем тег
             lines.append(f'  </{element_type}>')
 
         lines.append('</rdf:RDF>')
