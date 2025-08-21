@@ -36,7 +36,7 @@ exe = EXE(
     a.zipfiles,
     a.datas,
     [],
-    name='CSV_to_XML_Converter',
+    name='1C_to_CK-11',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,

@@ -15,10 +15,6 @@
 		"model_version": "ver:11.7.1.254;ext:6;",
 		"model_name": "CIM16"
 	},
-	"model_id": "_d69453f3-9699-4e90-b08d-81378980042b",
-	"model_created": "2025-08-20T11:50:08.2085734Z",
-	"model_version": "ver:11.7.1.254;ext:6;",
-	"model_name": "CIM16",
 	"file_management": {
 		"exclude_files": [
 			"Sample.csv"

@@ -1,3 +1,4 @@
+from modules.config_manager import get_config_value
 import sys
 import os
 import threading
@@ -23,10 +24,6 @@ def resource_path(relative_path):
     except Exception:
         base_path = os.path.abspath(".")
     return os.path.join(base_path, relative_path)
-
-
-def get_config_value(key, default=None):
-    return default
 
 
 class CSVProcessorApp(QMainWindow):

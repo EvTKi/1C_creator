@@ -1,6 +1,18 @@
-# modules/xml_generator.py
+"""
+Модуль генерации RDF/XML по иерархическим данным.
+
+Ответственность:
+- Построение XML на основе путей, UID, ККС и виртуальных контейнеров
+- Поддержка CIM16, включая AssetContainer и GenericPSR
+- Генерация UUID, управление иерархией и ссылками
+
+Новые правила для ККС:
+- AssetContainer: <me:IdentifiedObject.mRIDStr>{ККС}</me:IdentifiedObject.mRIDStr>
+- GenericPSR: <rh:PowerSystemResource.ccsCode>{ККС}</rh:PowerSystemResource.ccsCode>
+"""
+
 from typing import List, Tuple, Dict, Set
-from uuid import uuid4, NAMESPACE_X500
+from uuid import uuid4
 import logging
 from .config_manager import get_config_manager
 from collections import defaultdict
@@ -8,6 +20,16 @@ from queue import Queue
 
 
 class XMLGenerator:
+    """
+    Генератор RDF/XML для иерархии оборудования.
+
+    Преобразует структуру путей в XML с учётом:
+    - Пространств имён
+    - Виртуальных контейнеров (через ParentObject)
+    - ККС (теперь по новым правилам)
+    - Связей ParentObject и ChildObjects
+    """
+
     def __init__(self):
         self.config = get_config_manager().config
         xml_config = self.config["xml_generation"]
@@ -22,6 +44,15 @@ class XMLGenerator:
         self.logger.info("XMLGenerator инициализирован")
 
     def _generate_id(self, path: Tuple[str, ...]) -> str:
+        """
+        Генерирует уникальный ID на основе UUID4.
+
+        Args:
+            path (Tuple[str, ...]): путь к объекту
+
+        Returns:
+            str: ID в формате "#_uuid"
+        """
         uid = uuid4()
         self.logger.debug(f"Генерация UUID4 для пути {path}: {uid}")
         return f"#_{uid}"
@@ -29,16 +60,28 @@ class XMLGenerator:
     def generate(
         self,
         paths: List[Tuple[str, ...]],           # пути для создания
-        external_children: Dict[Tuple[str, ...], List[str]],  # внешние дети
+        # внешние дети (не используются)
+        external_children: Dict[Tuple[str, ...], List[str]],
         parent_uid: str,                        # корневой родитель
-        cck_map: Dict[Tuple[str, ...], str],    # CCK коды
+        cck_map: Dict[Tuple[str, ...], str],    # ККС по путям
         parent_uid_map: Dict[Tuple[str, ...], str],  # виртуальные родители
-        virtual_containers: Set[Tuple[str, ...]
-                                ] = None  # виртуальные контейнеры
+        # виртуальные контейнеры (для логики)
+        virtual_containers: Set[Tuple[str, ...]] = None
     ) -> str:
-        from collections import defaultdict
-        from queue import Queue
+        """
+        Основной метод генерации XML.
 
+        Args:
+            paths: список путей для создания объектов
+            external_children: не используется (виртуальные дети отключены)
+            parent_uid: UID корневого родителя
+            cck_map: словарь {путь -> ККС}
+            parent_uid_map: словарь {ребёнок -> UID виртуального родителя}
+            virtual_containers: множество путей с UID (для справки)
+
+        Returns:
+            str: готовый XML как строка
+        """
         self.logger.info("Начало генерации XML")
         if not paths:
             raise ValueError("Нет данных для генерации")
@@ -52,18 +95,17 @@ class XMLGenerator:
         children_map = defaultdict(list)
         parent_map = {}
 
-        # Строим иерархию для всех путей
+        # Строим иерархию: parent → [children]
         for path in paths:
             for i in range(1, len(path)):
                 parent = tuple(path[:i])
                 child = tuple(path[:i+1])
-
-                # Убедимся, что оба узла существуют
                 if parent in paths and child in paths:
                     if child not in children_map[parent]:
                         children_map[parent].append(child)
                     parent_map[child] = parent
 
+        # Генерируем ID для всех узлов
         id_map = {node: self._generate_id(node) for node in all_nodes}
 
         # === Генерация XML ===
@@ -72,13 +114,14 @@ class XMLGenerator:
         lines.append('<?iec61970-552 version="2.0"?>')
         lines.append('<?floatExporter 1?>')
 
+        # Открывающий тег RDF с пространствами имён
         rdf_open = '<rdf:RDF'
         for prefix, uri in self.namespaces.items():
             rdf_open += f' xmlns:{prefix}="{uri}"'
         rdf_open += '>'
         lines.append(rdf_open)
 
-        # FullModel
+        # === FullModel ===
         lines.append(f'  <md:FullModel rdf:about="{self.model_id}">')
         lines.append(
             f'    <md:Model.created>{self.model_created}</md:Model.created>')
@@ -91,7 +134,7 @@ class XMLGenerator:
         processed = set()
         q = Queue()
 
-        # Добавляем все пути в очередь для обработки
+        # Добавляем все пути в очередь
         for path in paths:
             q.put(path)
 
@@ -102,8 +145,8 @@ class XMLGenerator:
             processed.add(current)
 
             current_id = id_map[current]
-            is_leaf = (current not in children_map or not children_map[current]) and \
-                (current not in external_children or not external_children[current])
+            is_leaf = (
+                current not in children_map or not children_map[current])
 
             # Определяем тип объекта
             if len(current) == 1:
@@ -113,19 +156,17 @@ class XMLGenerator:
             else:
                 element_type = "cim:AssetContainer"
 
-            # Генерируем теги
+            # Начинаем тег
             lines.append(f'  <{element_type} rdf:about="{current_id}">')
             lines.append(
                 f'    <cim:IdentifiedObject.name>{current[-1]}</cim:IdentifiedObject.name>')
 
             # === ParentObject (с приоритетом виртуальных родителей) ===
             if len(current) == 1:
-                parent_resource = parent_uid  # корневой родитель
+                parent_resource = parent_uid
             else:
-                # Приоритет 1: виртуальный родитель
                 if current in parent_uid_map:
                     parent_resource = f"#_{parent_uid_map[current]}"
-                # Приоритет 2: обычный родитель
                 elif current in parent_map and parent_map[current] in id_map:
                     parent_resource = id_map[parent_map[current]]
                 else:
@@ -142,10 +183,17 @@ class XMLGenerator:
                 lines.append(
                     f'    <cim:PowerSystemResource.Assets rdf:resource="{parent_resource}" />')
 
-            # === CCK Code ===
+            # === ЗАПИСЬ ККС ПО НОВЫМ ПРАВИЛАМ ===
             if current in cck_map and cck_map[current]:
-                lines.append(
-                    f'    <cim:IdentifiedObject.description>{cck_map[current]}</cim:IdentifiedObject.description>')
+                kks_code = cck_map[current]
+                if element_type == "cim:AssetContainer":
+                    # Для AssetContainer используем me:IdentifiedObject.mRIDStr
+                    lines.append(
+                        f'    <me:IdentifiedObject.mRIDStr>{kks_code}</me:IdentifiedObject.mRIDStr>')
+                elif element_type == "me:GenericPSR":
+                    # Для GenericPSR используем rh:PowerSystemResource.ccsCode
+                    lines.append(
+                        f'    <rh:PowerSystemResource.ccsCode>{kks_code}</rh:PowerSystemResource.ccsCode>')
 
             # === ChildObjects (только для AssetContainer) ===
             if element_type == "cim:AssetContainer":
@@ -160,18 +208,9 @@ class XMLGenerator:
                                 lines.append(
                                     f'    <me:IdentifiedObject.ChildObjects rdf:resource="{child_id}" />')
                                 added_children.add(child_id)
-                                # Добавляем ребенка в очередь для обработки
                                 q.put(child)
 
-                # Добавляем внешних детей (виртуальные контейнеры)
-                if current in external_children:
-                    for uid in external_children[current]:
-                        ext_id = f"#_{uid}"
-                        if ext_id not in added_children:
-                            lines.append(
-                                f'    <me:IdentifiedObject.ChildObjects rdf:resource="{ext_id}" />')
-                            added_children.add(ext_id)
-
+            # Закрываем тег
             lines.append(f'  </{element_type}>')
 
         lines.append('</rdf:RDF>')
