@@ -1,0 +1,40 @@
+{
+	"xml_generation": {
+		"namespaces": {
+			"rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+			"md": "http://iec.ch/TC57/61970-552/ModelDescription/1#",
+			"cim": "http://iec.ch/TC57/2014/CIM-schema-cim16#",
+			"cim17": "http://iec.ch/TC57/CIM100#",
+			"me": "http://monitel.com/2014/schema-cim16#",
+			"rf": "http://gost.ru/2019/schema-cim01#",
+			"rh": "http://rushydro.ru/2015/schema-cim16#",
+			"so": "http://so-ups.ru/2015/schema-cim16#"
+		},
+		"model_id": "645cb9f8-3605-4e30-9dc0-8eced6eea501",
+		"model_created": "2025-08-20T11:55:49.0108544Z",
+		"model_version": "ver:11.7.1.254;ext:6;",
+		"model_name": "CIM16"
+	},
+	"model_id": "_d69453f3-9699-4e90-b08d-81378980042b",
+	"model_created": "2025-08-20T11:50:08.2085734Z",
+	"model_version": "ver:11.7.1.254;ext:6;",
+	"model_name": "CIM16",
+	"file_management": {
+		"exclude_files": [
+			"Sample.csv"
+		],
+		"log_directory": "log",
+		"input_directory": "input",
+		"output_directory": "output"
+	},
+	"logging": {
+		"level": "DEBUG",
+		"format": "%(asctime)s [%(levelname)s]: %(message)s",
+		"date_format": "%Y-%m-%d %H:%M:%S"
+	},
+	"csv_headers": {
+		"path": "НаименованиеКонтейнераОборудования",
+		"uid": "uid",
+		"CCK_code": "ОбъектРемонтаКодККС"
+	}
+}
