@@ -50,9 +50,9 @@ class CSVProcessorApp(QMainWindow):
         settings_layout.setContentsMargins(15, 15, 15, 15)
 
         # UID
-        uid_label = QLabel("UID папки для ролей:")
+        uid_label = QLabel("UID корня для нового дерева:")
         self.uid_input = QLineEdit()
-        self.uid_input.setPlaceholderText("Введите UID папки...")
+        self.uid_input.setPlaceholderText("Введите UID корня...")
         settings_layout.addWidget(uid_label, 0, 0)
         settings_layout.addWidget(self.uid_input, 0, 1, 1, 2)
 
