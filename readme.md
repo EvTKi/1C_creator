@@ -20,13 +20,6 @@
 
 ---
 
-## 🖼️ Скриншот интерфейса
-
-![GUI Example](screenshots/gui_example.png)  
-*(Создайте папку `screenshots/` и добавьте изображение, если нужно)*
-
----
-
 ## 🛠 Установка и запуск
 
 ### Вариант 1: Запуск из исходников (разработка)
@@ -60,7 +53,7 @@ python GUI.py
  csv-to-rdf-converter/
 │
 ├── config.json               ← Основная конфигурация
-├── GUI.py                    ← Графический интерфейс
+├── ui.py                     ← Графический интерфейс
 ├── main.py                   ← Основная логика обработки
 ├── modules/
 │   ├── config_manager.py     ← Управление конфигурацией
@@ -68,9 +61,8 @@ python GUI.py
 │   ├── hierarchy_parser.py   ← Парсинг иерархии
 │   ├── logger_manager.py     ← Логирование
 │   └── xml_generator.py      ← Генерация XML
-├── log/                      ← Логи (создаётся автоматически)
 ├── requirements.txt          ← Зависимости
-└── README.txt                ← Эта инструкция
+└── readme.md                 ← Эта инструкция
 ```
 
 ## ⚙️ Конфигурация (`config.json`)
@@ -85,9 +77,6 @@ python GUI.py
 | `model_version` | Версия модели                                   |
 | `model_name`    | Название модели                                 |
 
-<button class="rounded-lg bg-transparent transition leading-[20px]"><i class="iconfont leading-none icon-line-download-02 !text-20"></i></button>
-
-> 
 > 🔹 Пространства `me` и `rh` используются для новых тегов ККС. 
 
 ### `file_management`
@@ -97,7 +86,6 @@ python GUI.py
 | `exclude_files` | Файлы, которые игнорируются (например,`Sample.csv`) |
 | `log_directory` | Папка для логов                                     |
 
-<button class="rounded-lg bg-transparent transition leading-[20px]"><i class="iconfont leading-none icon-line-download-02 !text-20"></i></button>
 
 ### `logging`
 
@@ -107,7 +95,6 @@ python GUI.py
 | `format`      | Формат сообщения                                     |
 | `date_format` | Формат даты                                          |
 
-<button class="rounded-lg bg-transparent transition leading-[20px]"><i class="iconfont leading-none icon-line-download-02 !text-20"></i></button>
 
 ### `csv_headers`
 
@@ -116,8 +103,6 @@ python GUI.py
 | `path`     | Название столбца с путём (например,`"НаименованиеКонтейнераОборудования"`) |
 | `uid`      | Столбец с UID виртуального контейнера                                      |
 | `CCK_code` | Столбец с кодом ККС (теперь используется по-новому)                        |
-
-<button class="rounded-lg bg-transparent transition leading-[20px]"><i class="iconfont leading-none icon-line-download-02 !text-20"></i></button>
 
 * * *
 
