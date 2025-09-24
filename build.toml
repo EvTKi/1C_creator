@@ -17,6 +17,7 @@ pyinstaller.hiddenimports = [
     "PyQt5.QtCore",
     "PyQt5.QtGui",
     "PyQt5.QtWidgets",
+    "PyQt5.QtPrintSupport",  # если используется печать
     "main",
     "modules.hierarchy_parser",
     "modules.xml_generator",
