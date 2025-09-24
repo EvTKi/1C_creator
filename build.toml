@@ -13,6 +13,10 @@ src = "config.json"
 dest = "."
 
 pyinstaller.hiddenimports = [
+    "PyQt5",
+    "PyQt5.QtCore",
+    "PyQt5.QtGui",
+    "PyQt5.QtWidgets",
     "main",
     "modules.hierarchy_parser",
     "modules.xml_generator",
@@ -25,9 +29,6 @@ pyinstaller.noconsole = true
 pyinstaller.onefile = true
 pyinstaller.upx = true
 
-# Обязательная секция для build.py
+# Обязательная секция для совместимости с build.py
 [build]
 author = "EvTK"
-# Можно добавить другие поля, если build.py их использует:
-# output_dir = "dist"
-# platform = "windows"
