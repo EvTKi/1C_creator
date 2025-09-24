@@ -19,7 +19,8 @@ jobs:
 
       - name: 🔹 Установка зависимостей
         run: |
-          pip install pyinstaller toml PyQt6
+          pip install pyinstaller toml
+          pip install -r requirements.txt
 
       - name: 🔹 Чтение версии
         id: version
