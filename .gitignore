@@ -7,3 +7,6 @@ __pecache__
 *.csv
 !Sample.csv
 *.xml
+
+.env_1C_creator/
+venv/
