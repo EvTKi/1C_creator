@@ -115,6 +115,13 @@ def prepare_final():
     shutil.copy(config_json, FINAL_DIR / "config.json")
     print("[OK] Config copied")
 
+    csv_sample = ROOT_DIR / "Sample.csv"
+    if not csv_sample.exists():
+        print("[ERROR] config.json not found")
+        sys.exit(1)
+    shutil.copy(csv_sample, FINAL_DIR / "Sample.csv")
+    print("[OK] Sample.csv copied")
+
 
 # --- Архивация ---
 def make_zip():
