@@ -3,7 +3,7 @@
 /output
 /build
 /dist
-__pecache__
+__pycache__
 *.csv
 !Sample.csv
 *.xml

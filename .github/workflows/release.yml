@@ -1,0 +1,45 @@
+name: 🏗️ Сборка .exe
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build-exe:
+    runs-on: windows-latest
+    steps:
+      - name: 🔹 Checkout
+        uses: actions/checkout@v4
+
+      - name: 🔹 Установка Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: 🔹 Установка зависимостей
+        run: |
+          pip install pyinstaller toml PyQt6
+
+      - name: 🔹 Чтение версии
+        id: version
+        run: |
+          $version = Get-Content -Path VERSION -Encoding UTF8 | ForEach-Object { $_.Trim() }
+          echo "RELEASE_VERSION=$version" >> $env:GITHUB_ENV
+          echo "TAG_NAME=v$version" >> $env:GITHUB_ENV
+        shell: pwsh
+
+      - name: 🔹 Запуск сборки
+        run: |
+          python build-tools/build.py
+        shell: pwsh
+
+      - name: 🔹 Опубликовать релиз
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ env.TAG_NAME }}
+          name: Выпуск ${{ env.TAG_NAME }}
+          body: Автоматически собранный дистрибутив
+          files: dist/*.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}

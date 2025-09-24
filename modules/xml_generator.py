@@ -14,9 +14,10 @@
 from typing import List, Tuple, Dict, Set
 from uuid import uuid4
 import logging
-from .config_manager import get_config_manager
+import html
 from collections import defaultdict
 from queue import Queue
+from .config_manager import get_config_manager
 
 
 class XMLGenerator:
@@ -158,8 +159,12 @@ class XMLGenerator:
 
             # Начинаем тег
             lines.append(f'  <{element_type} rdf:about="{current_id}">')
+
+            # --- Экранируем имя перед вставкой в XML ---
+            escaped_name = html.escape(
+                current[-1] if current else "", quote=False)
             lines.append(
-                f'    <cim:IdentifiedObject.name>{current[-1]}</cim:IdentifiedObject.name>')
+                f'    <cim:IdentifiedObject.name>{escaped_name}</cim:IdentifiedObject.name>')
 
             # === ParentObject (с приоритетом виртуальных родителей) ===
             if len(current) == 1:
@@ -185,15 +190,17 @@ class XMLGenerator:
 
             # === ЗАПИСЬ ККС ПО НОВЫМ ПРАВИЛАМ ===
             if current in cck_map and cck_map[current]:
-                kks_code = cck_map[current]
+                # --- Экранируем ККС перед вставкой в XML ---
+                escaped_kks_code = html.escape(cck_map[current], quote=False)
+
                 if element_type == "cim:AssetContainer":
                     # Для AssetContainer используем me:IdentifiedObject.mRIDStr
                     lines.append(
-                        f'    <me:IdentifiedObject.mRIDStr>{kks_code}</me:IdentifiedObject.mRIDStr>')
+                        f'    <me:IdentifiedObject.mRIDStr>{escaped_kks_code}</me:IdentifiedObject.mRIDStr>')
                 elif element_type == "me:GenericPSR":
                     # Для GenericPSR используем rh:PowerSystemResource.ccsCode
                     lines.append(
-                        f'    <rh:PowerSystemResource.ccsCode>{kks_code}</rh:PowerSystemResource.ccsCode>')
+                        f'    <rh:PowerSystemResource.ccsCode>{escaped_kks_code}</rh:PowerSystemResource.ccsCode>')
 
             # === ChildObjects (только для AssetContainer) ===
             if element_type == "cim:AssetContainer":
