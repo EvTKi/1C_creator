@@ -1,13 +1,9 @@
 # build.toml — конфигурация сборки .exe через PyInstaller
 
 [pyinstaller]
-# Основной скрипт с GUI
 script = "ui.py"
-
-# Имя итогового .exe (может содержать кириллицу — Windows поддерживает)
 name = "1C_to_CK-11"
 
-# Данные для включения в сборку (аналог --add-data)
 [[pyinstaller.datas]]
 src = "modules"
 dest = "modules"
@@ -16,7 +12,6 @@ dest = "modules"
 src = "config.json"
 dest = "."
 
-# Скрытые импорты (аналог --hidden-import)
 pyinstaller.hiddenimports = [
     "main",
     "modules.hierarchy_parser",
@@ -26,10 +21,13 @@ pyinstaller.hiddenimports = [
     "modules.logger_manager"
 ]
 
-# Пути поиска модулей (аналог --paths) — не требуются, если структура стандартная
-# pyinstaller.paths = []
-
-# Дополнительные флаги
 pyinstaller.noconsole = true
 pyinstaller.onefile = true
 pyinstaller.upx = true
+
+# Обязательная секция для build.py
+[build]
+author = "EvTK"
+# Можно добавить другие поля, если build.py их использует:
+# output_dir = "dist"
+# platform = "windows"
